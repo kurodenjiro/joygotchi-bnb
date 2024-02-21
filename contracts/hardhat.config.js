@@ -39,7 +39,7 @@ module.exports = {
         vicTestNew: {
             url: "https://rpc-testnet.viction.xyz",
             accounts: [process.env.PRIVATE_KEY],
-            gas: "auto",
+            // gas: "auto",
         },
         vicMain: {
             url: "https://rpc.viction.xyz",
