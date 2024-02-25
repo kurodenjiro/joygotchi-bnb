@@ -14,7 +14,7 @@ const nextConfig = {
       FAUCET_ADDRESS:'0x20449b21e2DDb4a1C335C2e65DD731482450558f',
       DAO_ADDRESS:'0x410EaA07644593d428568eA1B6b435e6f6Ad3C4D',
       EXPLORER_URL:'https://op-bnb-testnet-explorer-api.nodereal.io',
-      HOST:'http://localhost:3000'
+      HOST:'https://joygotchi-bnb.vercel.app'
     },
 }
 
