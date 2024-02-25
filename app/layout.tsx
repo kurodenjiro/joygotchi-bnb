@@ -19,7 +19,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={clsx("font-sans antialiased", Silkscreen.className)}>
+      <body className={clsx("antialiased", Silkscreen.className)}>
         <Providers>
           {children}
         </Providers>

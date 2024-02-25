@@ -17,5 +17,4 @@ const nextConfig = {
       HOST:'https://joygotchi-bnb.vercel.app'
     },
 }
-
 module.exports = nextConfig
