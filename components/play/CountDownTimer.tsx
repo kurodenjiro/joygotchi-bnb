@@ -1,22 +1,41 @@
 import React, { useState, useEffect } from "react";
 
 interface commentProp {
-  seconds: number;
+    targetDate: number;
 }
-
-const CountDownTimer = ({ seconds }: commentProp) => {
-  const [remainSecond, setRemainSecond] = useState(0);
+interface TimeDisplayValuesType {
+    days: number;
+    hours: number;
+    minutes: number;
+    seconds: number;
+  }
+  
+  interface CounterType {
+    displayValue: number;
+    label: string;
+  }
+const CountDownTimer = ({ targetDate }: commentProp) => {
+  const [remainSecond, setRemainSecond] = useState<TimeDisplayValuesType>({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0
+  });
 
   useEffect(() => {
-    const countDownSecond = seconds;
 
-    const startTime = Date.now();
     const countDown = setInterval(() => {
-      const pastSeconds = (Date.now() - startTime) / 1000;
-      const remain = countDownSecond - pastSeconds;
-      setRemainSecond(remain < 0 ? 0 : remain);
+        const rightJustNow = new Date().getTime();
+        const runway = targetDate - rightJustNow;
+        const stateObj = {
+          days: Math.floor(runway / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((runway % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          minutes: Math.floor((runway % (1000 * 60 * 60)) / (1000 * 60)),
+          seconds: Math.floor((runway % (1000 * 60)) / 1000)
+        };
+      setRemainSecond(stateObj);
 
-      if (remain <= 0) {
+      if (!targetDate) {
         clearInterval(countDown);
       }
     }, 1000);
@@ -24,14 +43,13 @@ const CountDownTimer = ({ seconds }: commentProp) => {
     return () => {
       clearInterval(countDown);
     };
-  }, [seconds]);
-  useEffect(() => {
-    console.log(new Date(remainSecond * 1000).toISOString());
-  }, [remainSecond]);
+  }, [targetDate]);
+  
+
 
   return (
     <div className="contain">
-      {new Date(remainSecond * 1000).toISOString().substr(11, 8)}
+      {remainSecond.days}:{remainSecond.hours}:{remainSecond.minutes}:{remainSecond.seconds}
     </div>
   );
 };

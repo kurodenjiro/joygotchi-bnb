@@ -23,14 +23,11 @@ import {
     useSwitchNetwork
 } from "wagmi";
 import { readContracts, watchAccount, writeContract, prepareWriteContract } from '@wagmi/core'
-
 import CountDownTimer from "./CountDownTimer";
 import Slider from "react-slick";
-import { decodeAbiParameters } from 'viem'
 
-const nftAddress = process.env.NFT_ADDRESS;
 const MAX_ALLOWANCE = BigInt('20000000000000000000000')
-const tokenAddress = process.env.TOKEN_ADDRESS
+
 
 
 export const Pet = () => {
@@ -45,7 +42,6 @@ export const Pet = () => {
     const [ownPetEvol, setOwnPetEvol] = React.useState<any>(null)
     const [selectedItem, setSelectedItem] = React.useState<any>(null)
     const [isApprove, setIsApprove] = React.useState(false)
-    const [balloons, setBalloons] = React.useState<any>(null)
     const [petName, setPetName] = React.useState<any>(null)
     const [connectorsData, setConnectors] = React.useState<any>([])
     const [countDownseconds, setCountDownseconds] = React.useState(0);
@@ -84,67 +80,49 @@ export const Pet = () => {
         prevArrow: <SamplePrevArrow />
     };
 
-    const fetchMyAPI = async () => {
-        if (address) {
-            setIsAddress(true)
-        }
-        else {
-            setIsAddress(false);
-        };
-       // https://op-bnb-mainnet-explorer-api.nodereal.io/api/token/getTokensByAddress?address=0x7fdce7ecc58b799b287c44ff57f159f5579e4bf8&pageSize=0x64
-       //https://op-bnb-testnet-explorer-api.nodereal.io/api/token/getxTokensByAddress?address=0x5950cF7303605acBC5B274E8cA658542832Cb9a3&pageSize=0x64
-       //let response: any = await fetch(`${process.env.EXPLORER_URL}/api/tx/getAssetTransferByAddress?page=${page}&type=721&pageSize=20&address=${process.env.NFT_ADDRESS}`)
-        let response: any = await fetch(`${process.env.EXPLORER_URL}/api/tx/getAssetTransferByAddress?page=1&type=721&pageSize=20&address=${address}`)
+    const getNftList = async () => {
+        let response: any = await fetch(`${process.env.HOST}/api/bnb/nft?page=1&address=${address}`)
         response = await response.json()
-        const petArr: any = [];
-        let checkPet = false;
-        let checkPetId = await localStorage.getItem('pet')
+        const nftList: any = [];
+        let isPetExist = false;
+        let getPetId = await localStorage.getItem('pet')
         if (response?.data) {
-        
-            for (const element of response?.data?.list) {
-                const values = decodeAbiParameters(
-                    [{ name: 'x', type: 'uint32' }],
-                    element.erc721TokenId,
-                  )
+            for (const nft of response?.data) {
                     const Info: any = await readContracts({
                         contracts: [
                             {
                                 address: `0x${process.env.NFT_ADDRESS?.slice(2)}`,
                                 abi: nftAbi,
                                 functionName: 'getPetInfo',
-                                args: [BigInt(values[0].toString())],
+                                args: [BigInt(nft.id)],
                             }
                         ],
                     })
-                    if (values[0].toString() == checkPetId) {
-                        checkPet = true
+                    if (nft.id == getPetId) {
+                        isPetExist = true
                     }
-                    petArr.push({
-                        value: values[0].toString(),
+                    nftList.push({
+                        value: nft.id,
                         label: Info[0].result[0]
                     })
                 
             }
         }
 
-        if (petArr[0]) {
+        if (nftList[0]) {
             let pet = null;
             let petId: any = null;
-            if (checkPet) {
-                console.log("petcheck", checkPet)
-                pet = localStorage.getItem('pet')
+            if (isPetExist) {
+                pet = getPetId
             }
             if (pet) {
-                setSelectedPet(pet);
-                petId = BigInt(pet)
-                console.log("petcheck", pet)
+                petId = pet
             } else {
-                localStorage.setItem('pet', petArr[0].value);
-                petId = petArr[0].value;
-                setSelectedPet(petArr[0].value)
-                console.log("petcheck", petArr[0].value)
+                localStorage.setItem('pet', nftList[0].value);
+                petId = nftList[0].value;
             }
-
+            
+            setSelectedPet(petId)
             const Info: any = await readContracts({
                 contracts: [
                     {
@@ -178,20 +156,18 @@ export const Pet = () => {
                 ],
             })
             setOwnPetEvol(InfoEvol[0].result)
-            console.log("InfoAttr", InfoAttr, InfoEvol)
-            const seconds = parseInt(Info[0].result[4]) * 1000 - Date.now();
+            const seconds = parseInt(Info[0].result[4]) * 1000;
             setCountDownseconds(seconds)
             setOwnPet(Info[0].result)
-
         }
-        setPetData(petArr)
-        if (petArr.length > 0) {
+        setPetData(nftList)
+        if (nftList.length > 0) {
             setIsPet(true)
         }
-        if (petArr.length == 0) {
+        if (nftList.length == 0) {
             setIsPet(false)
         }
-        let items: any = [0, 1, 2, 3, 4];
+        let items: any = [ 1, 2, 3, 4,0];
         let itemArr: any = [];
         for (const element of items) {
             const Info: any = await readContracts({
@@ -225,7 +201,7 @@ export const Pet = () => {
             },
             onSuccess(data) {
                 localStorage.removeItem('pet')
-                fetchMyAPI()
+                getNftList()
             }
         })
 
@@ -239,7 +215,7 @@ export const Pet = () => {
         functionName: "setPetName",
         args: [debouncedSelectedPet, debouncedPetName],
         onSettled: (e) => {
-            console.log('Mutate', e)
+
         },
     });
 
@@ -252,7 +228,7 @@ export const Pet = () => {
     const { isLoading: isLoadingPetNameResult } = useWaitForTransaction({
         hash: petNameResult?.hash,
         onSuccess(data) {
-            fetchMyAPI()
+            getNftList()
         },
     })
 
@@ -260,9 +236,8 @@ export const Pet = () => {
         setPetName(event.target.value);
     };
     const handleChangeSelectPet = async (event: any) => {
-        await localStorage.setItem('pet', event.target.value);
-        await setSelectedPet(event.target.value);
-        await fetchMyAPI();
+        localStorage.setItem('pet', event.target.value);
+        getNftList();
     };
     const onChangePetName = () => {
         setPetNameAsync?.();
@@ -270,7 +245,6 @@ export const Pet = () => {
     }
     const onBuyAccessory = async (itemId: any) => {
         setSelectedItem(itemId);
-        console.log("buyItem", selectedPet, itemId)
         const config = await prepareWriteContract({
             address: `0x${process.env.NFT_ADDRESS?.slice(2)}`,
             abi: nftAbi,
@@ -279,8 +253,7 @@ export const Pet = () => {
         })
         const tx = await writeContract(config);
         if (tx) {
-
-            fetchMyAPI();
+            getNftList();
         }
 
     }
@@ -294,7 +267,7 @@ export const Pet = () => {
         const tx = await writeContract(config);
         if (tx) {
 
-            fetchMyAPI();
+            getNftList();
         }
     }
 
@@ -312,58 +285,7 @@ export const Pet = () => {
     const { isLoading: isLoadingMint, isSuccess: isSuccessMint } = useWaitForTransaction({
         hash: dataMint?.hash,
         onSuccess(data) {
-            let getItemInfo: any = [];
-            itemData.forEach((element: any) => {
-                if (element.id == selectedItem) {
-                    getItemInfo = element;
-                }
-            });
-
-            const loadData = async () => {
-                const petId = localStorage.getItem('pet');
-                if (petId) {
-                    const Info: any = await readContracts({
-                        contracts: [
-                            {
-                                address: `0x${process.env.NFT_ADDRESS?.slice(2)}`,
-                                abi: nftAbi,
-                                functionName: 'getPetInfo',
-                                args: [BigInt(petId)],
-                            }
-                        ],
-                    })
-
-                    const InfoAttr: any = await readContracts({
-                        contracts: [
-                            {
-                                address: `0x${process.env.NFT_ADDRESS?.slice(2)}`,
-                                abi: nftAbi,
-                                functionName: 'getPetAttributes',
-                                args: [BigInt(petId)],
-                            }
-                        ],
-                    })
-                    setOwnPetAttr(InfoAttr[0].result)
-                    const InfoEvol: any = await readContracts({
-                        contracts: [
-                            {
-                                address: `0x${process.env.NFT_ADDRESS?.slice(2)}`,
-                                abi: nftAbi,
-                                functionName: 'getPetEvolutionInfo',
-                                args: [BigInt(petId)],
-                            }
-                        ],
-                    })
-                    setOwnPetEvol(InfoEvol[0].result)
-                    console.log("InfoAttr", InfoAttr, InfoEvol)
-
-                    const seconds = parseInt(Info[0].result[4]) * 1000 - Date.now();
-                    setCountDownseconds(seconds)
-                    setOwnPet(Info[0].result)
-                }
-
-            }
-            loadData();
+            getNftList()
         }
     })
 
@@ -414,13 +336,13 @@ export const Pet = () => {
         else {
             setIsChain(false)
         }
-        fetchMyAPI()
+        getNftList()
     }, [address, chain])
     return (
         isChain && isAddress && isPet && (
             <>
                 <div className="grid grid-cols-6 gap-3 pt-5">
-                    <div className="col-start-1 col-end-3 ">
+                    <div className="col-start-1 col-end-4 ">
                         <div className="grid grid-rows-2 grid-flow-col gap-0 items-center ">
                             <div className="row-span-2 "> <Image
                                 radius={"none"}
@@ -429,7 +351,7 @@ export const Pet = () => {
                             /></div>
                             <div className="col-span-2 "><span className="text-lg text-white">TOD</span></div>
 
-                            <div className="row-span-1 col-span-2 "><span className="font-bold text-lg text-white"> <CountDownTimer seconds={countDownseconds} /></span></div>
+                            <div className="row-span-1 col-span-2 "><span className="font-bold text-lg text-white"> <CountDownTimer targetDate={countDownseconds} /></span></div>
                         </div>
                     </div>
                     <div className="col-end-8 col-span-3 ">
@@ -458,18 +380,18 @@ export const Pet = () => {
                         </div>
                         <div className="flex justify-center pt-5">
                             {ownPetEvol && ownPetEvol[1] == 0 && ownPet[3] > 1 && ownPet[1] !== 4 && (
-                                <Button color="warning" variant="solid" size="sm" aria-label="Like" onClick={onEvol}>
-                                    Ready for Evolution 2
+                                <Button color="warning" variant="solid" size="sm"  onClick={onEvol}>
+                                    Evol Now !
                                 </Button>
                             )}
                             {ownPetEvol && ownPetEvol[1] == 1 && ownPet[3] > 2 && ownPet[1] !== 4 && (
-                                <Button color="warning" variant="solid" size="sm" aria-label="Like" onClick={onEvol}>
-                                    Ready for Evolution 3
+                                <Button color="warning" variant="solid" size="sm"  onClick={onEvol}>
+                                    Evol Now !
                                 </Button>
                             )}
                             {ownPet && ownPet[1] == 4 && (
-                                <Button color="danger" variant="solid" size="sm" aria-label="Like" onClick={onEvol}>
-                                    Your pet is Dead and needs to use Holy water
+                                <Button color="danger" variant="solid" size="sm" >
+                                    Use Holy water
                                 </Button>
                             )}
                         </div>
@@ -605,10 +527,10 @@ export const Pet = () => {
                                                         <button type="button" style={{ backgroundImage: "url(/gotchi/Assets/Buy_Button.png)" }} className="bg-no-repeat bg-center w-full h-16" onClick={() => onBuyAccessory(item.id)}> </button>
                                                     )}
                                                 {(ownPet && ownPet[1] !== 4 && item.name == "Holy Water") && (
-                                                    <p className="nes-btn w-full">  Can not buy item </p>
+                                                    <p className="text-danger">  Can not buy item </p>
                                                 )}
                                                 {(ownPet && ownPet[1] == 4 && item.name !== "Holy Water") && (
-                                                    <p className="nes-btn w-full">  Can not buy item </p>
+                                                    <p className="text-danger">  Can not buy item </p>
                                                 )}
                                             </CardFooter>
                                         </Card>
@@ -668,7 +590,6 @@ export const Pet = () => {
                     onClick={approveAsync}
                 >
                     Approval
-
                 </button>
 
             ) : (
@@ -677,12 +598,8 @@ export const Pet = () => {
                     disabled={!mint} onClick={mint}
                 >
                     Mint A GotChi
-
                 </button>
-
             )}
-
-
         </div>
 
     )

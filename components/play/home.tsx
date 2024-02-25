@@ -195,13 +195,10 @@ export const Home = () => {
     }, [allowance, tokenBlanceData])
 
     return (
-        <section className="h-full  max-w-lg  mx-auto font-medium bg-slate-50 px-8 bg-no-repeat bg-container bg-gray-500 bg-center" style={{ backgroundImage: "url(/Assets/landing.png)" , height:"800px"}} >
-
+        <>
             <div>{errorSwitchNetwork && errorSwitchNetwork.message}</div>
             <div className="inline-block max-w-lg text-center justify-center">
-
             </div>
-
             {isClient ? (
                 (!isEthBlance) ? (
                     <div className="pb-5" style={{ paddingTop: "130%" }}>
@@ -265,19 +262,12 @@ export const Home = () => {
                 </div>
             )}
             {/* {(isPrepareError || isError) && (
-        <div><span className="text-red-400">Error: {(prepareError || error)?.message}</span></div>
-      )}
-	        {(isError) && (
-        <div><span className="text-red-400">Error: {error?.message}</span></div>
-      )} */}
-            <div className="flex gap-3">
+                <div><span className="text-red-400">Error: {(prepareError || error)?.message}</span></div>
+            )}
+            {(isError) && (
+                <div><span className="text-red-400">Error: {error?.message}</span></div>
+            )} */}
 
-
-
-
-            </div>
-
-
-        </section>
+            </>
     );
 }

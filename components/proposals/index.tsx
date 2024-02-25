@@ -24,7 +24,7 @@ export const Proposals = () => {
       .catch(error => console.log(error))
   }, [publicClient])
 
-  const fetchMyAPI = async () => {
+  const getProposals = async () => {
 
 
     const totalProposalData: any = await readContracts({
@@ -75,7 +75,7 @@ export const Proposals = () => {
     console.log("totalSupply", (parseInt(totalSupply[0].result) / 1e18) * 0.01)
   }
   React.useEffect(() => {
-    fetchMyAPI();
+    getProposals();
   }, [])
   return (
     <div className="h-full lg:px-6">
@@ -96,18 +96,16 @@ export const Proposals = () => {
                 </Link>
               </div>
             </div>
-            <div className="grid md:grid-cols-2 grid-cols-1 2xl:grid-cols-3 gap-5  justify-center w-full">
+            <div className="grid md:grid-cols-3 grid-cols-1 2xl:grid-cols-3 gap-5  justify-center w-full">
               {proposals.map((proposal: any, index: number) => (
                 <Link href={`/proposal/${index}`}>
                   <Card className="max-w-max">
                     <CardHeader className="justify-between">
                       <div className="flex gap-5">
-                        <Avatar isBordered radius="full" size="md" src="/avatars/avatar-1.png" />
+                        <Avatar isBordered radius="full" size="md" src="/Assets/EggIcon.png" />
                         <div className="flex flex-col gap-1 items-start justify-center">
                           <h4 className="text-small font-semibold leading-none text-default-600">{proposal && proposal.creator.substring(0, 5)}...{proposal && proposal.creator.substring(proposal.creator.length - 4, proposal.creator.length)}</h4>
                           <h5 className="text-small tracking-tight text-default-400">Block ends:{proposal.deadline.toString()}</h5>
-                          
-
                         </div>
                       </div>
                       <Button

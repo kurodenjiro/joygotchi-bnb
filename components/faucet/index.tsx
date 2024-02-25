@@ -14,7 +14,6 @@ export const Faucet = () => {
   const debouncedAddressFaucet = useDebounce(addressFaucet, 500)
 
   const handleChangeAddress = (event: any) => {
-
     setAddressFaucet(event.target.value);
   };
 

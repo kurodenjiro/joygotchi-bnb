@@ -8,6 +8,6 @@ import NextLink from "next/link";
 
 export const Plays = () => (
   <div className="relative flex flex-col h-screen   ">
-        <Play />
-        </div>
+    <Play />
+  </div>
 );

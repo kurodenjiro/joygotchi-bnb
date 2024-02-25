@@ -23,8 +23,10 @@ export const Breed = () => {
     const [petAttrPetC, setAttrPetC] = React.useState<any>(null)
     const [selectedPetA, setSelectedPetA] = React.useState<any>(null)
     const [selectedPetB, setSelectedPetB] = React.useState<any>(null)
+    const [loadingState, setLoadingState] = React.useState<any>(false)
     const { address, connector, isConnected } = useAccount()
-    const [isPet, setIsPet] = React.useState<any>(true)
+    const [isApprove, setIsApprove] = React.useState(false)
+    const [isPet, setIsPet] = React.useState<any>(false)
     useContractEvent({
         address: `0x${process.env.NFT_ADDRESS?.slice(2)}`,
         abi: nftAbi,
@@ -114,39 +116,26 @@ export const Breed = () => {
             // let response : any= await fetch(`${process.env.EXPLORER_URL}/api/v2/transactions/${tx.hash}/logs`)
             // response = await response.json()
             // console.log("logs",response);
-            //fetchMyAPI();
+            //getNftList();
         }
 
     }
-    const fetchMyAPI = async () => {
-        if (address) {
-            setIsAddress(true)
-        }
-        else {
-            setIsAddress(false);
-        };
-        //api/tx/getAssetTransferByAddress?page=1&&pageSize=20&address=
-        //let response: any = await fetch(`${process.env.EXPLORER_URL}/api/tx/getAssetTransferByAddress?page=${page}&type=721&pageSize=20&address=${process.env.NFT_ADDRESS}`)
-        let response: any = await fetch(`${process.env.EXPLORER_URL}/api/tx/getAssetTransferByAddress?page=1&type=721&pageSize=40&address=${address}`)
+    const getNftList = async () => {
+        let response: any = await fetch(`${process.env.HOST}/api/bnb/nft?page=1&address=${address}`)
         response = await response.json()
         const petArr: any = [];
         const petArrA: any = [];
         const petArrB: any = [];
         console.log("petcheck", response)
-        if (response.data?.list) {
-            for (const element of response.data?.list) {
-                const values = decodeAbiParameters(
-                    [{ name: 'x', type: 'uint32' }],
-                    element.erc721TokenId,
-                  )
-                  const data = values[0].toString()
+        if (response.data) {
+            for (const nft of response.data) {
                 const Info: any = await readContracts({
                     contracts: [
                         {
                             address: `0x${process.env.NFT_ADDRESS?.slice(2)}`,
                             abi: nftAbi,
                             functionName: 'getPetInfo',
-                            args: [BigInt(data)],
+                            args: [BigInt(nft.id)],
                         }
                     ],
                 })
@@ -156,7 +145,7 @@ export const Breed = () => {
                             address: `0x${process.env.NFT_ADDRESS?.slice(2)}`,
                             abi: nftAbi,
                             functionName: 'getPetAttributes',
-                            args: [BigInt(data)],
+                            args: [BigInt(nft.id)],
                         }
                     ],
                 })
@@ -166,41 +155,38 @@ export const Breed = () => {
                             address: `0x${process.env.NFT_ADDRESS?.slice(2)}`,
                             abi: nftAbi,
                             functionName: 'getPetEvolutionInfo',
-                            args: [BigInt(data)],
+                            args: [BigInt(nft.id)],
                         }
                     ],
                 })
-                
-                    petArr.push({
-                        value: BigInt(data),
+
+                petArr.push({
+                    value: BigInt(nft.id),
+                    label: Info[0].result[0],
+                    sex: InfoAttr[0].result[4],
+                    status: Info[0].result[1],
+                    evol: InfoEvol[0].result[1]
+                })
+                if (InfoAttr[0].result[4] == 0 && Info[0].result[1] !== 4 && InfoEvol[0].result[1] == 2) {
+                    petArrA.push({
+                        value: nft.id,
                         label: Info[0].result[0],
                         sex: InfoAttr[0].result[4],
                         status: Info[0].result[1],
                         evol: InfoEvol[0].result[1]
                     })
-                    if (InfoAttr[0].result[4] == 0 && Info[0].result[1] !== 4 && InfoEvol[0].result[1] == 2) {
-                        petArrA.push({
-                            value: BigInt(data),
-                            label: Info[0].result[0],
-                            sex: InfoAttr[0].result[4],
-                            status: Info[0].result[1],
-                            evol: InfoEvol[0].result[1]
-                        })
-                    }
-                    if (InfoAttr[0].result[4] == 1 && Info[0].result[1] !== 4 && InfoEvol[0].result[1] == 2) {
-                        petArrB.push({
-                            value: BigInt(data),
-                            label: Info[0].result[0],
-                            sex: InfoAttr[0].result[4],
-                            status: Info[0].result[1],
-                            evol: InfoEvol[0].result[1]
-                        })
-                    }
-                
+                }
+                if (InfoAttr[0].result[4] == 1 && Info[0].result[1] !== 4 && InfoEvol[0].result[1] == 2) {
+                    petArrB.push({
+                        value: nft.id,
+                        label: Info[0].result[0],
+                        sex: InfoAttr[0].result[4],
+                        status: Info[0].result[1],
+                        evol: InfoEvol[0].result[1]
+                    })
+                }
+
             }
-            console.log("petArr", petArr)
-            console.log("petArrA", petArrA)
-            console.log("petArrB", petArrB)
             if (petArrA.length > 0) {
                 setSelectedPetA(petArrA[0].value)
                 const InfoIPFS: any = await readContracts({
@@ -214,7 +200,6 @@ export const Breed = () => {
                     ],
                 })
                 setImagePetA(InfoIPFS[0].result)
-                setIsPet(true)
             }
             if (petArrB.length > 0) {
                 setSelectedPetB(petArrB[0].value)
@@ -229,40 +214,38 @@ export const Breed = () => {
                     ],
                 })
                 setImagePetB(InfoIPFS[0].result)
+
+            }
+            if (petArr.length > 0) {
                 setIsPet(true)
             }
             setPetData(petArr)
             setPetDataA(petArrA)
             setPetDataB(petArrB)
+            setLoadingState(true)
         }
 
 
-
-
-
-        if (petArr.length == 0) {
-            setIsPet(false)
-        }
 
 
     }
 
     React.useEffect(() => {
-
         if (address) {
             setIsAddress(true)
         }
+        else {
+            setIsAddress(false);
+        };
 
-
-        fetchMyAPI()
+        getNftList()
 
 
     }, [address])
     return (
         <>
             <div className='pt-10'>
-                {isAddress && isPet && (
-
+                {isAddress && isPet == true && loadingState == true && (
                     <div className="grid grid-cols-6 ">
                         <div className="col-start-1 col-span-6 text-white text-lg">Please Choose Male Pet and Female Pet</div>
 
@@ -375,11 +358,16 @@ export const Breed = () => {
                     </div>
 
                 )}
-
-
-                <br />
-
-
+                {isAddress && isPet == false && loadingState == false && (
+                    <div className="flex flex-col items-center justify-center gap-4 py-8 md:py-10 ">
+                        <h1 className="mt-48 text-danger">Loading</h1>
+                    </div>
+                )}
+                {isAddress && isPet == false && loadingState == true && (
+                    <div className="flex flex-col items-center justify-center gap-4 py-8 md:py-10 ">
+                        <h1 className="mt-48 text-danger">You do not have a Pet Evol 3 Pet and are still alive to breed</h1>
+                    </div>
+                )}
             </div>
         </>
     );

@@ -12,11 +12,6 @@ import { Image } from "@nextui-org/react";
 import CountDownTimer from "./CountDownTimer";
 import { decodeAbiParameters } from 'viem'
 
-const fetcher = async (...args: Parameters<typeof fetch>) => {
-    const res = await fetch(...args);
-    return res.json();
-};
-
 export const Battle = () => {
     const { address } = useAccount();
     const [page, setPage] = React.useState(1);
@@ -39,47 +34,8 @@ export const Battle = () => {
         return pet;
     }, []);
 
-
-
-
-
     const renderCell = React.useCallback((data: any, columnKey: any) => {
-
         const cellValue = data[columnKey];
-        // const res: any = await readContracts({
-        //     contracts: [
-        //         {
-        //             address: `0x${process.env.NFT_ADDRESS?.slice(2)}`,
-        //             abi: nftAbi,
-        //             functionName: 'getPetInfo',
-        //             args: [data.id],
-        //         }
-        //     ],
-        // })
-        // const pet = res[0].result;
-        // const InfoAttr: any = await readContracts({
-        //     contracts: [
-        //         {
-        //             address: `0x${process.env.NFT_ADDRESS?.slice(2)}`,
-        //             abi: nftAbi,
-        //             functionName: 'getPetAttributes',
-        //             args: [data.id],
-        //         }
-        //     ],
-        // })
-        // const petInfoAttr = InfoAttr[0].result
-        // const InfoEvol: any = await readContracts({
-        //     contracts: [
-        //         {
-        //             address: `0x${process.env.NFT_ADDRESS?.slice(2)}`,
-        //             abi: nftAbi,
-        //             functionName: 'getPetEvolutionInfo',
-        //             args: [data.id],
-        //         }
-        //     ],
-        // })
-        // const petInfoEvol = InfoEvol[0].result
-
         switch (columnKey) {
             case "pet":
                 return (
@@ -143,7 +99,7 @@ export const Battle = () => {
                             <div className="flex gap-5">
                                 <Avatar isBordered radius="lg" color="primary" size="md" src={`/gotchi/animation/${ownPetAttr && ownPetAttr[1] == 0 ? "black_dragon" : "green_dragon"}/${ownPetEvol && ownPetEvol[1]}.gif`} />
                                 <div className="flex flex-col gap-1 items-start justify-center">
-                                    <h4 className="text-small font-semibold leading-none text-default-600">{ownPet && ownPet[0]}#{ownPet && ownPet[9]}</h4>
+                                    <h4 className="text-small font-semibold leading-none text-default-600">{ownPet && ownPet[0]}#{ownedPetId && ownedPetId}</h4>
                                     <h5 className="text-small tracking-tight text-default-400">LV:{ownPet && ownPet[3].toString()}</h5>
                                 </div>
                             </div>
@@ -167,7 +123,7 @@ export const Battle = () => {
                                     size="sm"
                                     variant={"bordered"}
                                 >
-                                    <CountDownTimer seconds={ownPet ? parseInt(ownPet[4]) * 1000 - Date.now() : 0} />
+                                    <CountDownTimer targetDate={ownPet ? parseInt(ownPet[4]) * 1000 : 0} />
                                 </Button>
                                 <Button
                                     className={`bg-transparent  ${ownPet ? ownPet[1] == 0 ? 'text-green-500 border-green-500' : ownPet[1] == 1 ? 'text-yellow-500 border-yellow-500' : ownPet[1] == 2 ? 'text-yellow-500 border-yellow-500' : ownPet[1] == 3 ? 'text-red-500 border-red-500' : ownPet[1] == 4 ? 'text-neutral-500 border-neutral-500' : '' : ''}`}
@@ -200,7 +156,6 @@ export const Battle = () => {
         );
     }, [ownPet]);
     const onAttack = async (tokenId: any) => {
-
         const config = await prepareWriteContract({
             address: `0x${process.env.NFT_ADDRESS?.slice(2)}`,
             abi: nftAbi,
@@ -212,7 +167,7 @@ export const Battle = () => {
             const list = activity;
             list.push(` You Attacked #${tokenId} `)
             setActivity(list)
-            fetchMyAPI();
+            getNftList();
         }
     };
 
@@ -226,32 +181,16 @@ export const Battle = () => {
         })
         const tx = await writeContract(config);
         if (tx) {
-
             const list = activity;
             list.push(` You Killed #${tokenId} `)
             setActivity(list)
-            fetchMyAPI();
+            getNftList();
         }
     };
 
-
-
-    const fetchMyAPI = async () => {
+    const getNftList = async () => {
         const pet = typeof window !== 'undefined' ? localStorage.getItem('pet') + "" : null;
         if (pet) {
-            const Info: any = await readContracts({
-                contracts: [
-                    {
-                        address: `0x${process.env.NFT_ADDRESS?.slice(2)}`,
-                        abi: nftAbi,
-                        functionName: 'getPetInfo',
-                        args: [BigInt(pet)],
-                    }
-                ],
-            })
-
-            Info[0].result.push(BigInt(pet));
-
             const InfoAttr: any = await readContracts({
                 contracts: [
                     {
@@ -263,6 +202,7 @@ export const Battle = () => {
                 ],
             })
             setOwnPetAttr(InfoAttr[0].result)
+            
             const InfoEvol: any = await readContracts({
                 contracts: [
                     {
@@ -274,35 +214,35 @@ export const Battle = () => {
                 ],
             })
             setOwnPetEvol(InfoEvol[0].result)
+
+            const Info: any = await readContracts({
+                contracts: [
+                    {
+                        address: `0x${process.env.NFT_ADDRESS?.slice(2)}`,
+                        abi: nftAbi,
+                        functionName: 'getPetInfo',
+                        args: [BigInt(pet)],
+                    }
+                ],
+            })
+            Info[0].result.push(BigInt(pet));
             setOwnPet(Info[0].result);
-
         }
-
-        // /next_page_params 
     }
 
     const getPetList = async () => {
-        let newPetList = [];
-        let response: any = await fetch(`${process.env.EXPLORER_URL}/api/tx/getAssetTransferByAddress?page=${page}&type=721&pageSize=20&address=${process.env.NFT_ADDRESS}`)
+        let response: any = await fetch(`${process.env.HOST}/api/bnb/nft?page=${page}`)
         response = await response.json()
-        let petListData : any =  response?.data?.list?.filter((item: any) => item.to !== address && item.from == '0x0000000000000000000000000000000000000000');
-        console.log("petList1",petListData)
-        
-        for (const element of petListData) {
-            const values = decodeAbiParameters(
-                [{ name: 'x', type: 'uint32' }],
-                element.erc721TokenId,
-              )
-              const data = values[0].toString()
-              console.log("values",values)
-            // code block to be executed
+        const nftList: any = [];
+        let NftListFilter : any =  response?.data?.filter((item: any) => item.to !== address);
+        for (const nft of NftListFilter) {
             const res: any = await readContracts({
                 contracts: [
                     {
                         address: `0x${process.env.NFT_ADDRESS?.slice(2)}`,
                         abi: nftAbi,
                         functionName: 'getPetInfo',
-                        args: [BigInt(values[0].toString())],
+                        args: [BigInt(nft.id)],
                     }
                 ],
             })
@@ -313,7 +253,7 @@ export const Battle = () => {
                         address: `0x${process.env.NFT_ADDRESS?.slice(2)}`,
                         abi: nftAbi,
                         functionName: 'getPetAttributes',
-                        args: [BigInt(data)],
+                        args: [BigInt(nft.id)],
                     }
                 ],
             })
@@ -324,20 +264,19 @@ export const Battle = () => {
                         address: `0x${process.env.NFT_ADDRESS?.slice(2)}`,
                         abi: nftAbi,
                         functionName: 'getPetEvolutionInfo',
-                        args: [BigInt(data)],
+                        args: [BigInt(nft.id)],
                     }
                 ],
             })
             const petInfoEvol = InfoEvol[0].result
-            newPetList.push({ pet: pet, petInfoAttr: petInfoAttr, petInfoEvol: petInfoEvol, id: data })
+            nftList.push({ pet: pet, petInfoAttr: petInfoAttr, petInfoEvol: petInfoEvol, id: nft.id })
         }
 
 
-        setPetList(newPetList);
+        setPetList(nftList);
         setLoadingState(true);
     }
     React.useEffect(() => {
-
         getPetList()
     }, [page])
 
@@ -362,7 +301,7 @@ export const Battle = () => {
                     const list = activity;
                     //list.push(` Your Pet attacked ${JSON.stringify(petAttacked)} and ${ownPetId == logs[0].args.winner ? "won" : "lost"} ${logs[0].args.scoresWon} points`)
                     setActivity(list)
-                    fetchMyAPI();
+                    getNftList();
                 }
             }
             getlogs();
@@ -389,7 +328,7 @@ export const Battle = () => {
 
                     const list = activity;
                     list.push(` You killed ${JSON.stringify(petDeaded)} `)
-                    fetchMyAPI();
+                    getNftList();
                     setActivity(list)
 
                 }
@@ -399,11 +338,11 @@ export const Battle = () => {
     })
 
     useEffect(() => {
-        fetchMyAPI()
+        getNftList()
     }, [])
     return (
         <>
-            <div>
+            <div className='pb-3'>
                 <Table isStriped
                     topContent={topContent}
                     topContentPlacement="outside"
@@ -422,8 +361,8 @@ export const Battle = () => {
                             </div>
                         ) : null}
                     selectionMode="single" aria-label="Example static collection table h-44" classNames={{
-                        base: "max-h-[520px] pt-3",
-                        table: "min-h-[420px] pt-3",
+                        base: "max-h-[620px] pt-3",
+                        table: "min-h-[620px] pt-3",
                     }}>
                     <TableHeader>
                         <TableColumn key="pet" >Info</TableColumn>
@@ -434,29 +373,19 @@ export const Battle = () => {
                         items={petList || []}
                         loadingState={loadingState}
                         loadingContent={<Spinner label="Loading..." />}
-
                     >
-
-
                         {(item: any) => (
                             <TableRow key={item?.id}>
                                 {(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
                             </TableRow>
                         )}
-
-
                     </TableBody>
-
                 </Table>
-
-
             </div>
-            <br />
             <Card >
                 <CardHeader className="flex gap-3">
                     <div className="flex flex-col">
                         <p className="text-md">Activity</p>
-                        <p className="text-small text-default-500">list</p>
                     </div>
                 </CardHeader>
                 <Divider />
@@ -464,12 +393,8 @@ export const Battle = () => {
                     {activity.length > 0 && activity.map((item: string, index: number) => (
                         <p key={index}>{item}</p>
                     ))}
-
                 </CardBody>
             </Card>
-            <br />
-            <br />
-            <br />
         </>
     )
 }

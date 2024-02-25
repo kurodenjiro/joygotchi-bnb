@@ -25,7 +25,9 @@ export const Play = () => {
     <>
       <main className="container mx-auto max-w-7xl  flex-grow" >
         {active == "home" && (
-          <Home />
+         <section className="h-full max-w-lg  mx-auto font-medium bg-slate-50 px-8 bg-no-repeat bg-cover" style={{ backgroundImage: "url(/Assets/landing.png)", height: "800px" }} >
+            <Home />
+          </section>
         )}
         {active == "pet" && (
           <section className="h-full max-w-lg  mx-auto font-medium bg-slate-50 px-8 bg-no-repeat bg-cover" style={{ backgroundImage: "url(/gotchi/Assets/Background.png)"   , height:"800px" }}>

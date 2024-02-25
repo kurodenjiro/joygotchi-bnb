@@ -13,7 +13,8 @@ const nextConfig = {
       TOKEN_ADDRESS:'0x0B47EEB7290D413D2a51273cf7fd440c6f53E8e4',
       FAUCET_ADDRESS:'0x20449b21e2DDb4a1C335C2e65DD731482450558f',
       DAO_ADDRESS:'0x410EaA07644593d428568eA1B6b435e6f6Ad3C4D',
-      EXPLORER_URL:'https://op-bnb-testnet-explorer-api.nodereal.io'
+      EXPLORER_URL:'https://op-bnb-testnet-explorer-api.nodereal.io',
+      HOST:'http://localhost:3000'
     },
 }
 
