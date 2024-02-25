@@ -105,7 +105,6 @@ export const Pet = () => {
                         value: nft.id,
                         label: Info[0].result[0]
                     })
-                
             }
         }
 
@@ -121,7 +120,7 @@ export const Pet = () => {
                 localStorage.setItem('pet', nftList[0].value);
                 petId = nftList[0].value;
             }
-            
+
             setSelectedPet(petId)
             const Info: any = await readContracts({
                 contracts: [
@@ -257,19 +256,25 @@ export const Pet = () => {
         }
 
     }
-    const onEvol = async () => {
-        const config = await prepareWriteContract({
-            address: `0x${process.env.NFT_ADDRESS?.slice(2)}`,
-            abi: nftAbi,
-            functionName: "evolve",
-            args: [selectedPet]
-        })
-        const tx = await writeContract(config);
-        if (tx) {
 
-            getNftList();
+    const {
+        config:configEvoleData,
+        error: prepareErrorEvol,
+        isError: isPrepareErrorEvol,
+    } = usePrepareContractWrite({
+        address: `0x${process.env.NFT_ADDRESS?.slice(2)}`,
+        abi: nftAbi,
+        args: [debouncedSelectedPet],
+        functionName: 'evolve',
+    })
+    const { data: dataEvole, error: errorEvol, isError: isErrorEvol, write: asyncEvol } = useContractWrite(configEvoleData)
+
+    const { isLoading: isLoadingEvol, isSuccess: isSuccessEvol } = useWaitForTransaction({
+        hash: dataEvole?.hash,
+        onSuccess(data) {
+            getNftList()
         }
-    }
+    })
 
     const {
         config,
@@ -380,12 +385,12 @@ export const Pet = () => {
                         </div>
                         <div className="flex justify-center pt-5">
                             {ownPetEvol && ownPetEvol[1] == 0 && ownPet[3] > 1 && ownPet[1] !== 4 && (
-                                <Button color="warning" variant="solid" size="sm"  onClick={onEvol}>
+                                <Button color="warning" variant="solid" size="sm"  onClick={asyncEvol}>
                                     Evol Now !
                                 </Button>
                             )}
                             {ownPetEvol && ownPetEvol[1] == 1 && ownPet[3] > 2 && ownPet[1] !== 4 && (
-                                <Button color="warning" variant="solid" size="sm"  onClick={onEvol}>
+                                <Button color="warning" variant="solid" size="sm"  onClick={asyncEvol}>
                                     Evol Now !
                                 </Button>
                             )}
