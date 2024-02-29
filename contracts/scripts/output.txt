@@ -1,0 +1,90 @@
+const species = [
+        [
+            [{
+                image: "https://bafkreigw3j7bn3yhkbqt2ercytjhghzn462n5pxzyig4lptuyv4zv6gn6y.ipfs.nftstorage.link/",
+                name: "1",
+                attackWinRate: BigInt("20"),
+                nextEvolutionLevel: BigInt("1")
+            },
+            {
+                image: "https://bafkreiaqk7mr45wnjwtb4lyv4gpy5rloma3sxq3fq2t6s43tcy3ovnki4m.ipfs.nftstorage.link/",
+                name: "2",
+                attackWinRate: BigInt("25"),
+                nextEvolutionLevel: BigInt("2")
+            },
+            {
+                image: "https://bafkreiav7btv3nuei6znfpttelgln5tdcz7pfllcio333og4qwnbkwltoa.ipfs.nftstorage.link/",
+                name: "3",
+                attackWinRate: BigInt("35"),
+                nextEvolutionLevel: BigInt("3")
+            }
+            ],
+            BigInt("10"),
+            true,
+            BigInt("0"),
+            { skinColor: BigInt("0"), hornStyle: BigInt("0"), wingStyle: BigInt("0") }
+        ],
+        [
+            [{
+                image: "https://bafkreigw3j7bn3yhkbqt2ercytjhghzn462n5pxzyig4lptuyv4zv6gn6y.ipfs.nftstorage.link/",
+                name: "1",
+                attackWinRate: BigInt("20"),
+                nextEvolutionLevel: BigInt("1")
+            },
+            {
+                image: "https://bafkreiaqk7mr45wnjwtb4lyv4gpy5rloma3sxq3fq2t6s43tcy3ovnki4m.ipfs.nftstorage.link/",
+                name: "2",
+                attackWinRate: BigInt("25"),
+                nextEvolutionLevel: BigInt("2")
+            },
+            {
+                image: "https://bafkreiav7btv3nuei6znfpttelgln5tdcz7pfllcio333og4qwnbkwltoa.ipfs.nftstorage.link/",
+                name: "3",
+                attackWinRate: BigInt("35"),
+                nextEvolutionLevel: BigInt("3")
+            }
+            ],
+            BigInt("10"),
+            true,
+            BigInt("0"),
+            { skinColor: BigInt("0"), hornStyle: BigInt("0"), wingStyle: BigInt("0") }
+        ],
+        [
+            [{
+                image: "https://bafkreigw3j7bn3yhkbqt2ercytjhghzn462n5pxzyig4lptuyv4zv6gn6y.ipfs.nftstorage.link/",
+                name: "1",
+                attackWinRate: BigInt("20"),
+                nextEvolutionLevel: BigInt("1")
+            },
+            {
+                image: "https://bafkreiaqk7mr45wnjwtb4lyv4gpy5rloma3sxq3fq2t6s43tcy3ovnki4m.ipfs.nftstorage.link/",
+                name: "2",
+                attackWinRate: BigInt("25"),
+                nextEvolutionLevel: BigInt("2")
+            },
+            {
+                image: "https://bafkreiav7btv3nuei6znfpttelgln5tdcz7pfllcio333og4qwnbkwltoa.ipfs.nftstorage.link/",
+                name: "3",
+                attackWinRate: BigInt("35"),
+                nextEvolutionLevel: BigInt("3")
+            }
+            ],
+            BigInt("10"),
+            true,
+            BigInt("0"),
+            { skinColor: BigInt("0"), hornStyle: BigInt("0"), wingStyle: BigInt("0") }
+        ]
+    ];
+
+    await dao.connect(user).createProposal(
+        "test1", // Tạo proposal với tiêu đề là test1
+        await sc.getAddress(), // địa chỉ của sc thực thi logic
+        sc.interface.encodeFunctionData('createSpeciesBatch', [
+            species.map(s => s[0]),
+            species.map(s => s[1]),
+            species.map(s => s[2]),
+            species.map(s => s[3]),
+            species.map(s => s[4]),
+        ]), // sinh payload tham số của DAO
+        ethers.parseEther('10') // phần thưởng nhận được khi proposal được chấp thuận
+      );
